@@ -5,20 +5,20 @@ import { TokenType } from "@supernovaio/sdk-exporters"
  * Main configuration of the exporter - type interface. Default values for it can be set through `config.json` and users can override the behavior when creating the pipelines.
  */
 export enum ThemeExportStyle {
-    ApplyDirectly = "applyDirectly",
-    SeparateFiles = "separateFiles",
-    MergedTheme = "mergedTheme",
-    NestedThemes = "nestedThemes"
+  ApplyDirectly = "applyDirectly",
+  SeparateFiles = "separateFiles",
+  MergedTheme = "mergedTheme",
+  NestedThemes = "nestedThemes"
 }
 
 export enum FileStructure {
-    SeparateByType = "separateByType",
-    SingleFile = "singleFile"
+  SeparateByType = "separateByType",
+  SingleFile = "singleFile"
 }
 
 export enum TokenSortOrder {
-    Default = "default",
-    Alphabetical = "alphabetical"
+  Default = "default",
+  Alphabetical = "alphabetical"
 }
 
 export enum TokenNameStructure {
@@ -38,6 +38,8 @@ export type ExporterConfiguration = {
   showDescriptions: boolean
   /** When enabled, values will use references to other tokens where applicable */
   useReferences: boolean
+  /** When enabled, token references will *not* be resolved to their lowest reference. When disabled, tokens will be resolved as in the official Style Dictionary exporter. */
+  disableFullChainResolution: boolean
   /** Style of exported token names */
   tokenNameStyle: StringCase
   /** Format of the exported colors */
