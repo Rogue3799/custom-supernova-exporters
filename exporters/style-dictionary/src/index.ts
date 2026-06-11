@@ -91,7 +91,8 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
           // Step 2: Generate a separate file for each theme's token values
           const themeFiles = themesToApply.map((theme) => {
             // Apply the current theme to all tokens
-            const themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+            let themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+            themedTokens = revertFullChainResolutionIfNecessary(themedTokens)
             
             // Temporarily disable base value export to prevent duplicates in themed output
             const originalExportBaseValues = exportConfiguration.exportBaseValues
@@ -148,7 +149,8 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
 
             // Then create files for each theme
             const themeFiles = themesToApply.map((theme) => {
-              const themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+            let themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+            themedTokens = revertFullChainResolutionIfNecessary(themedTokens)
               // Pass false for exportBaseValues to prevent including base values in theme files
               const originalExportBaseValues = exportConfiguration.exportBaseValues
               exportConfiguration.exportBaseValues = false
@@ -180,7 +182,8 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
       case ThemeExportStyle.SeparateFiles:
         if (exportConfiguration.fileStructure === FileStructure.SingleFile) {
           // Generate one combined file per theme
-          const themeFiles = themesToApply.map((theme) => {
+            let themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+            themedTokens = revertFullChainResolutionIfNecessary(themedTokens)
             const themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
             const themePath = ThemeHelper.getThemeIdentifier(theme, StringCase.camelCase)
             return combinedStyleOutputFile(themedTokens, tokenGroups, themePath, theme, tokenCollections)
@@ -204,7 +207,8 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
         //   ├── color.json
         //   └── typography.json
         const themeFiles = themesToApply.flatMap((theme) => {
-          const themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+          let themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, [theme])
+          themedTokens = revertFullChainResolutionIfNecessary(themedTokens)
           const themePath = ThemeHelper.getThemeIdentifier(theme, StringCase.camelCase)
           return Object.values(TokenType)
             .map((type) => styleOutputFile(type, themedTokens, tokenGroups, themePath, theme, tokenCollections))
@@ -224,7 +228,8 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
         if (exportConfiguration.fileStructure === FileStructure.SingleFile) {
           const baseFile = exportConfiguration.exportBaseValues
             ? combinedStyleOutputFile(tokens, tokenGroups, '', undefined, tokenCollections)
-            : null
+          let themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, themesToApply)
+          themedTokens = revertFullChainResolutionIfNecessary(themedTokens)
 
           const themedTokens = sdk.tokens.computeTokensByApplyingThemes(tokens, tokens, themesToApply)
           const mergedThemeFile = combinedStyleOutputFile(
@@ -291,6 +296,51 @@ Pulsar.export(async (sdk: Supernova, context: PulsarContext): Promise<Array<AnyO
     ? Object.values(TokenType)
         .map((type) => styleOutputFile(type, tokens, tokenGroups, '', undefined, tokenCollections))
     : []
+
+//#region Custom Functions
+function revertFullChainResolutionIfNecessary(tokens: Token[]) {
+  if (!exportConfiguration.disableFullChainResolution) return tokens
+
+  return tokens.map((token) => {
+    const newToken = { ...token }
+
+    const { referencedTokenId } = newToken.value ?? {}
+    const { referencePersistentId } = newToken.origin ?? {}
+
+    if (referencedTokenId && referencePersistentId) {
+      newToken.value.referencedTokenId = newToken.origin?.referencePersistentId
+    }
+
+    return newToken
+  })
+}
+//#endregion
+
+//#region Custom Utilities
+function getTokenById(tokens: Token[], id: string) {
+  return tokens.find((token) => token.id == id)
+}
+
+function getTokenByReferenceOriginName(tokens: Token[], originName: string) {
+  return tokens.find((token) => token.origin?.referenceOriginName == originName)
+}
+
+function getTokenBySourceId(tokens: Token[], sourceId: string) {
+  return tokens.find((token) => token.origin?.sourceId == sourceId)
+}
+
+function getTokenByTokenValueRef(tokens: Token[], searchToken: Token & { value: any }) {
+  return tokens.find((token) => token.id == searchToken.value?.referenceTokenId)
+}
+
+function getFullTokenNameFromPathAndName(token: Token) {
+  if (!token.tokenPath) {
+    return token.name
+  }
+
+  return [...token.tokenPath, token.name].join("/")
+}
+//#endregion
   
   return processOutputFiles(defaultFiles)
 })
