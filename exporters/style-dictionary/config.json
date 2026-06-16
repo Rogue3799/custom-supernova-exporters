@@ -116,7 +116,7 @@
   {
     "key": "forceRemUnit",
     "type": "boolean",
-    "default": false,
+    "default": true,
     "title": "Force REM units",
     "description": "Convert all pixel values to REM units.",
     "category": "Token values"
@@ -188,7 +188,7 @@
   {
     "key": "exportOnlyThemedTokens",
     "type": "boolean",
-    "default": false,
+    "default": true,
     "title": "Export only themed tokens",
     "description": "Theme files will only include tokens that have different values from the base value.",
     "category": "Themes"
@@ -204,7 +204,7 @@
   {
     "key": "fileStructure",
     "type": "enum",
-    "default": "separateByType",
+    "default": "singleFile",
     "title": "File structure",
     "description": "Control how token styles are organized in files",
     "category": "Style files",
@@ -230,7 +230,7 @@
   {
     "key": "tokenSortOrder",
     "type": "enum",
-    "default": "default",
+    "default": "alphabetical",
     "title": "Token name sorting",
     "description": "Control how tokens are sorted in the generated token files.",
     "category": "Style files",
@@ -342,7 +342,7 @@
   {
     "key": "useTokenTypePrefixes",
     "type": "boolean",
-    "default": true,
+    "default": false,
     "title": "Use token type prefixes",
     "description": "Prefix hierarchy with token type (e.g., 'color.group.primary').",
     "category": "Token names"
